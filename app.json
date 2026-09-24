@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "fluentai",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -37,6 +37,7 @@
       "expo-router",
       "./plugins/withGradleProperties",
       "./plugins/withAndroidManifest",
+      "./plugins/withBuildGradle",
       [
         "@react-native-voice/voice",
         {
