@@ -35,6 +35,8 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withGradleProperties",
+      "./plugins/withAndroidManifest",
       [
         "@react-native-voice/voice",
         {
