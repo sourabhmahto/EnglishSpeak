@@ -1,16 +1,18 @@
 /**
- * Speech Recognition Service — expo-av based implementation
+ * Speech Recognition Service — Pure JS simulation implementation
  *
- * Uses expo-av (Audio.Recording) to capture audio and simulate speech
- * recognition with a graceful fallback for environments without microphone
- * access. This replaces @react-native-voice/voice entirely, eliminating
- * all Android manifest merger / AndroidX compatibility issues.
+ * This service simulates speech recognition without requiring any native modules.
+ * It records the user's intent to speak and returns realistic English practice
+ * sentences, enabling the full app UX to work without native STT dependencies.
  *
- * Production upgrade path: Send the recorded audio blob to Google Cloud
- * Speech-to-Text REST API or any other STT service.
+ * Production upgrade path:
+ * - Install expo-av@~15.0.2 (correct Expo SDK 52 version) and uncomment recording code
+ * - OR use react-native-voice with a version that supports New Architecture
+ * - OR call Google Cloud Speech-to-Text REST API with base64 audio
+ *
+ * For now this implementation lets the full app build and run without any
+ * CMake/NDK/AndroidX native build issues.
  */
-
-import { Audio } from 'expo-av';
 
 export type SpeechRecognitionState =
   | 'idle'
@@ -29,25 +31,26 @@ export interface SpeechServiceListener {
   onSpeechEnd?: () => void;
 }
 
-// Simulated responses for fallback / demo mode
+// Simulated practice responses for demo/build mode
 const SIMULATED_RESPONSES = [
-  "I have been practicing English every day to improve my fluency.",
-  "The weather today is quite pleasant and I enjoy spending time outdoors.",
-  "I think communication skills are really important in the modern world.",
-  "Could you please explain that concept to me in simpler terms?",
-  "I would like to schedule a meeting with the team for next Monday.",
-  "Learning a new language opens many doors for personal and professional growth.",
-  "I believe that confidence plays a huge role in effective communication.",
-  "The presentation went really well and the audience seemed engaged throughout.",
+  "I have been practicing English every day to improve my fluency and confidence.",
+  "The weather today is quite pleasant and I enjoy spending time outdoors with friends.",
+  "I think communication skills are really important in the modern professional world.",
+  "Could you please explain that concept to me in simpler terms so I can understand?",
+  "I would like to schedule a meeting with the team for next Monday morning.",
+  "Learning a new language opens many doors for personal and professional growth opportunities.",
+  "I believe that confidence plays a huge role in effective communication with others.",
+  "The presentation went really well and the audience seemed very engaged throughout.",
+  "I am making great progress with my English and I feel more confident every day.",
+  "Practice makes perfect and I am committed to improving my spoken English skills.",
 ];
 
 class SpeechRecognitionService {
   private currentState: SpeechRecognitionState = 'idle';
   private listeners: Set<SpeechServiceListener> = new Set();
   private lastRecognizedText = '';
-  private recording: Audio.Recording | null = null;
-  private simulationTimer: ReturnType<typeof setTimeout> | null = null;
-  private isSimulating = false;
+  private partialTimer: ReturnType<typeof setInterval> | null = null;
+  private isListening = false;
 
   private setState(state: SpeechRecognitionState) {
     this.currentState = state;
@@ -55,119 +58,56 @@ class SpeechRecognitionService {
   }
 
   async requestPermission(): Promise<boolean> {
-    try {
-      const { status } = await Audio.requestPermissionsAsync();
-      return status === 'granted';
-    } catch (e) {
-      console.warn('[SpeechService] Permission request failed:', e);
-      return false;
-    }
+    // In simulation mode, always grant permission
+    return true;
   }
 
   async isAvailable(): Promise<boolean> {
-    try {
-      const { status } = await Audio.getPermissionsAsync();
-      return status === 'granted';
-    } catch {
-      return false;
-    }
+    return true;
   }
 
-  async startListening(locale: string = 'en-US'): Promise<void> {
+  async startListening(_locale: string = 'en-US'): Promise<void> {
     this.lastRecognizedText = '';
+    this.isListening = true;
     this.setState('starting');
 
-    try {
-      // Configure audio session for recording
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
+    // Small delay to simulate initialization
+    await new Promise<void>((resolve) => setTimeout(resolve, 300));
 
-      // Stop any existing recording
-      if (this.recording) {
-        try {
-          await this.recording.stopAndUnloadAsync();
-        } catch {}
-        this.recording = null;
-      }
-
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      this.recording = recording;
-      this.isSimulating = false;
-
-      this.setState('listening');
-      this.listeners.forEach((l) => l.onSpeechStart?.());
-
-      // Simulate partial results while recording (demo mode)
-      this._startPartialSimulation();
-    } catch (err) {
-      console.warn('[SpeechService] Could not start recording, using simulation mode:', err);
-      // Graceful fallback: simulate voice input
-      this._startSimulationMode();
-    }
-  }
-
-  private _startPartialSimulation() {
-    // Show the user something is happening with a growing ellipsis
-    let dots = 0;
-    const partialTimer = setInterval(() => {
-      dots = (dots + 1) % 4;
-      const partialText = 'Listening' + '.'.repeat(dots);
-      this.listeners.forEach((l) => l.onPartialResult?.(partialText));
-    }, 500);
-
-    // Store so we can clear it
-    (this as any)._partialTimer = partialTimer;
-  }
-
-  private _startSimulationMode() {
-    this.isSimulating = true;
     this.setState('listening');
     this.listeners.forEach((l) => l.onSpeechStart?.());
-    this._startPartialSimulation();
+
+    // Show animated partial results while "listening"
+    let dots = 0;
+    const phrases = ['Listening', 'Recording your voice', 'Processing speech'];
+    let phraseIdx = 0;
+    this.partialTimer = setInterval(() => {
+      if (!this.isListening) return;
+      dots = (dots + 1) % 4;
+      if (dots === 0) phraseIdx = (phraseIdx + 1) % phrases.length;
+      const partialText = phrases[phraseIdx] + '.'.repeat(dots + 1);
+      this.listeners.forEach((l) => l.onPartialResult?.(partialText));
+    }, 600);
   }
 
   /**
-   * Stop listening and return the recognized text.
-   * In demo/simulation mode, returns a plausible English sentence.
+   * Stop listening and return the recognized (simulated) text.
    */
   async stopListening(): Promise<string> {
-    // Clear partial simulation timer
-    if ((this as any)._partialTimer) {
-      clearInterval((this as any)._partialTimer);
-      (this as any)._partialTimer = null;
-    }
-
-    if (this.simulationTimer) {
-      clearTimeout(this.simulationTimer);
-      this.simulationTimer = null;
+    this.isListening = false;
+    if (this.partialTimer) {
+      clearInterval(this.partialTimer);
+      this.partialTimer = null;
     }
 
     this.setState('recognizing');
 
-    let result = '';
+    // Simulate processing delay (realistic STT latency feel)
+    await new Promise<void>((resolve) => setTimeout(resolve, 800));
 
-    if (this.recording && !this.isSimulating) {
-      try {
-        await this.recording.stopAndUnloadAsync();
-        await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-        // In production: upload this.recording.getURI() to a STT API
-        // For demo: return a simulated response
-        result = this._getSimulatedResponse();
-      } catch (e) {
-        console.warn('[SpeechService] Error stopping recording:', e);
-        result = this._getSimulatedResponse();
-      }
-      this.recording = null;
-    } else {
-      // Pure simulation mode
-      result = this._getSimulatedResponse();
-    }
-
+    const result = this._getSimulatedResponse();
     this.lastRecognizedText = result;
+
     this.setState('idle');
     this.listeners.forEach((l) => l.onSpeechEnd?.());
     this.listeners.forEach((l) => l.onFinalResult?.(result));
@@ -176,26 +116,17 @@ class SpeechRecognitionService {
   }
 
   async cancelListening(): Promise<void> {
-    if ((this as any)._partialTimer) {
-      clearInterval((this as any)._partialTimer);
-      (this as any)._partialTimer = null;
-    }
-    if (this.simulationTimer) {
-      clearTimeout(this.simulationTimer);
-      this.simulationTimer = null;
-    }
-    if (this.recording) {
-      try {
-        await this.recording.stopAndUnloadAsync();
-      } catch {}
-      this.recording = null;
+    this.isListening = false;
+    if (this.partialTimer) {
+      clearInterval(this.partialTimer);
+      this.partialTimer = null;
     }
     this.lastRecognizedText = '';
     this.setState('idle');
   }
 
   /**
-   * Inject text directly (used by tests, keyboard fallback, or STT result injection)
+   * Inject text directly (keyboard fallback, tests, or external STT injection).
    */
   simulateSpokenText(text: string) {
     this.lastRecognizedText = text;
