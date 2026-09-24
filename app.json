@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "FluentAI",
+    "slug": "fluentai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "fluentai",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fluentai.app",
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "FluentAI requires access to speech recognition to evaluate your spoken English fluency, pronunciation, and pacing in real time.",
+        "NSMicrophoneUsageDescription": "FluentAI requires microphone access so you can practice speaking English with AI conversation partners, complete speech workouts, and take impromptu speaking challenges."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "com.fluentai.app",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.INTERNET"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "FluentAI requires microphone access to listen to your English practice sessions and provide real-time feedback.",
+          "speechRecognitionPermission": "FluentAI uses native speech recognition to transcribe your spoken sentences for grammar and fluency analysis."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "0f3d0b3f-c64a-4776-84c0-c0b9ade0ed21"
+      }
+    },
+    "owner": "testforallapps"
+  }
+}
