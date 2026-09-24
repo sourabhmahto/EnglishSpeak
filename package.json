@@ -14,9 +14,9 @@
   "dependencies": {
     "@expo/vector-icons": "~14.0.4",
     "@react-native-async-storage/async-storage": "1.23.1",
-    "@react-native-voice/voice": "^3.2.4",
     "expo": "~52.0.37",
     "expo-asset": "~11.0.4",
+    "expo-av": "~14.0.7",
     "expo-constants": "~17.0.7",
     "expo-font": "~13.0.4",
     "expo-haptics": "~14.0.1",
@@ -44,17 +44,6 @@
     "ts-jest": "^29.2.5",
     "typescript": "~5.3.3"
   },
-  "overrides": {
-    "@expo/config-plugins": "~9.0.0"
-  },
-  "expo": {
-    "doctor": {
-      "reactNativeDirectoryCheck": {
-        "exclude": [
-          "@react-native-voice/voice"
-        ]
-      }
-    }
-  },
+
   "private": true
 }

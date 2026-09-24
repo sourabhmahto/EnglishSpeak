@@ -35,16 +35,7 @@
     },
     "plugins": [
       "expo-router",
-      "./plugins/withGradleProperties",
-      "./plugins/withAndroidManifest",
-      "./plugins/withBuildGradle",
-      [
-        "@react-native-voice/voice",
-        {
-          "microphonePermission": "FluentAI requires microphone access to listen to your English practice sessions and provide real-time feedback.",
-          "speechRecognitionPermission": "FluentAI uses native speech recognition to transcribe your spoken sentences for grammar and fluency analysis."
-        }
-      ]
+      "expo-av"
     ],
     "experiments": {
       "typedRoutes": true
